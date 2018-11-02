@@ -21,10 +21,10 @@ function install_deps {
     apt-get install -y software-properties-common
     apt-add-repository -y ppa:brightbox/ruby-ng
 
-    apt-key add ./node.gpg
+    curl -sS https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add -
     echo "deb https://deb.nodesource.com/node_8.x xenial main" > /etc/apt/sources.list.d/nodesource.list
 
-    apt-key add ./yarn.gpg
+    curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
     echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list
     apt-get update
     apt-get install -y ruby2.4{,-dev} nodejs yarn=1.7.* \
