@@ -89,6 +89,19 @@ function setup_database {
 }
 export -f setup_database
 
+function setup_rails_shortcut {
+    mkdir -p "$HOME/bin"
+    pushd "$HOME/bin"
+    cat << EOF > rails
+#!/bin/bash
+cd "$HOME/canvas-lms"
+bundle exec rails s --binding 0.0.0.0
+EOF
+    chmod +x rails
+    popd
+}
+export -f setup_rails_shortcut
+
 cd /vagrant
 mkdir -p /state
 chmod 777 /state
@@ -101,7 +114,8 @@ gem install bundler --version '< 1.14'
 as vagrant install_canvas_deps
 as vagrant config_canvas
 
+# you have to do this before running migrations or there's an error with the
+# brandable css
 as vagrant once build_assets
 as vagrant once setup_database
-
-# bundle exec rails s --binding 0.0.0.0
+as vagrant setup_rails_shortcut
