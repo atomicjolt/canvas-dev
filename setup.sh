@@ -29,7 +29,7 @@ function install_deps {
     apt-get update
     apt-get install -y ruby2.4{,-dev} nodejs yarn=1.7.* \
         {zlib1g,libxml2,libsqlite3,libxmlsec1}-dev make g++ git libpq-dev \
-        postgresql
+        postgresql redis-server
 
     apt-mark hold yarn
 }
@@ -58,13 +58,26 @@ function install_canvas_deps {
 export -f install_canvas_deps
 
 function config_canvas {
-    pushd "$HOME/canvas-lms"
+    pushd "$HOME/canvas-lms/config"
 
     for config in amazon_s3 delayed_jobs domain file_store outgoing_mail security external_migration database
     do
-        cp -v config/$config.yml.example config/$config.yml
+        cp -v $config.yml.example $config.yml
     done
 
+    # redis is required for oauth
+    cat << EOF > redis.yml
+development:
+  servers:
+    - redis://localhost
+  database: 1
+EOF
+
+    cat << EOF > domain.yml
+development:
+  domain: "canvas.atomicjolt.xyz"
+  ssl: true
+EOF
     popd
 }
 export -f config_canvas
