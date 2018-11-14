@@ -25,3 +25,14 @@ or simply `rails` which is a script on your path that does that for you.
 6. Visit canvas in your browser at localhost:8080.
 Username:  `user@example.com`
 Password: `asdfasdf`
+
+7. (optional) If you want ssl, copy the provided canvas.conf into your nginx
+   sites-enabled directory. This makes the assumption that you use the
+   atomicjolt.xyz ssl strategy. Otherwise you will have to modify it
+
+## Tips
+1. To run delayed jobs (if you need them):
+```bash
+cd ~/canvas-lms
+./script/delayed_job run
+```
