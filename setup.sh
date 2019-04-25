@@ -27,7 +27,7 @@ function install_deps {
     curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
     echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list
     apt-get update
-    apt-get install -y ruby2.4{,-dev} nodejs yarn=1.7.* \
+    apt-get install -y ruby2.4{,-dev} nodejs yarn=1.10.* \
         {zlib1g,libxml2,libsqlite3,libxmlsec1}-dev make g++ git libpq-dev \
         postgresql redis-server
 
@@ -38,7 +38,7 @@ function download_canvas {
     pushd "$HOME"
     git clone https://github.com/instructure/canvas-lms.git
     cd canvas-lms
-    git checkout release/2018-08-25.43
+    git checkout release/2019-03-09.24
     popd
 }
 export -f download_canvas
@@ -93,7 +93,7 @@ function setup_database {
     pushd "$HOME/canvas-lms"
     createdb canvas_development || true
     createdb canvas_test || true
-    export CANVAS_LMS_ADMIN_EMAIL=user@example.com
+    export CANVAS_LMS_ADMIN_EMAIL=admin@example.com
     export CANVAS_LMS_ADMIN_PASSWORD=asdfasdf
     export CANVAS_LMS_ACCOUNT_NAME="Atomic Jolt"
     export CANVAS_LMS_STATS_COLLECTION=opt_out

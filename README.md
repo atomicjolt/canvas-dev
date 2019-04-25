@@ -23,7 +23,7 @@ bundle exec rails --binding 0.0.0.0
 or simply `rails` which is a script on your path that does that for you.
 
 6. Visit canvas in your browser at localhost:8080.
-Username:  `user@example.com`
+Username:  `admin@example.com`
 Password: `asdfasdf`
 
 7. (optional) If you want ssl, copy the provided canvas.conf into your nginx
