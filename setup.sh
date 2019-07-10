@@ -27,7 +27,7 @@ function install_deps {
     curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
     echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list
     apt-get update
-    apt-get install -y ruby2.4{,-dev} nodejs yarn=1.10.* \
+    apt-get install -y dnsmasq ruby2.4{,-dev} nodejs yarn=1.10.* \
         {zlib1g,libxml2,libsqlite3,libxmlsec1}-dev make g++ git libpq-dev \
         postgresql redis-server
 
@@ -43,6 +43,14 @@ function download_canvas {
 }
 export -f download_canvas
 
+function patch_canvas {
+    pushd "$HOME/canvas-lms"
+    # -N and -r - make patch ignore changes that have already been applied
+    patch -N -r - -p1 < /vagrant/canvas.patch
+    popd
+}
+export -f patch_canvas
+
 function setup_pg_user {
     createuser vagrant
     psql -c "alter user vagrant with superuser" postgres
@@ -56,6 +64,15 @@ function install_canvas_deps {
     popd
 }
 export -f install_canvas_deps
+
+function config_dnsmasq {
+    cat << EOF > /etc/dnsmasq.d/atomicjolt.xyz
+address=/atomicjolt.xyz/10.0.2.2
+address=/*.atomicjolt.xyz/10.0.2.2
+EOF
+    service dnsmasq restart
+}
+export -f config_dnsmasq
 
 function config_canvas {
     pushd "$HOME/canvas-lms/config"
@@ -102,6 +119,20 @@ function setup_database {
 }
 export -f setup_database
 
+function enable_canvas_options {
+    cat << EOF | psql canvas_development
+INSERT INTO settings(name, value) VALUES ('enable_lti_content_migration', 'true');
+EOF
+    pushd "$HOME/canvas-lms"
+    cat << EOF | bundle exec rails c
+account = Account.first
+account.settings[:global_includes] = true
+account.save!
+EOF
+    popd
+}
+export -f enable_canvas_options
+
 function setup_rails_shortcut {
     mkdir -p "$HOME/bin"
     pushd "$HOME/bin"
@@ -121,14 +152,17 @@ chmod 777 /state
 
 once install_deps
 as vagrant once download_canvas
+as vagrant patch_canvas
 as postgres once setup_pg_user
 
 gem install bundler --version '< 1.14'
 as vagrant install_canvas_deps
+config_dnsmasq
 as vagrant config_canvas
 
 # you have to do this before running migrations or there's an error with the
 # brandable css
 as vagrant once build_assets
 as vagrant once setup_database
+as vagrant enable_canvas_options
 as vagrant setup_rails_shortcut
