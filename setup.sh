@@ -22,7 +22,7 @@ function install_deps {
     apt-add-repository -y ppa:brightbox/ruby-ng
 
     curl -sS https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add -
-    echo "deb https://deb.nodesource.com/node_8.x xenial main" > /etc/apt/sources.list.d/nodesource.list
+    echo "deb https://deb.nodesource.com/node_10.x xenial main" > /etc/apt/sources.list.d/nodesource.list
 
     curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
     echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list
@@ -38,7 +38,7 @@ function download_canvas {
     pushd "$HOME"
     git clone https://github.com/instructure/canvas-lms.git
     cd canvas-lms
-    git checkout release/2019-03-09.24
+    git checkout release/2019-09-25.13
     popd
 }
 export -f download_canvas
