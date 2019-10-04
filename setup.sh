@@ -43,6 +43,15 @@ function download_canvas {
 }
 export -f download_canvas
 
+function download_rce {
+    pushd "$HOME"
+    git clone https://github.com/instructure/canvas-rce-api.git
+    cd canvas-rce-api
+    git checkout v1.7
+    popd
+}
+export -f download_rce
+
 function patch_canvas {
     pushd "$HOME/canvas-lms"
     # -N and -r - make patch ignore changes that have already been applied
@@ -64,6 +73,13 @@ function install_canvas_deps {
     popd
 }
 export -f install_canvas_deps
+
+function install_rce_deps {
+    pushd "$HOME/canvas-rce-api"
+    cp .env.example .env
+    npm install
+}
+export -f install_rce_deps
 
 function config_dnsmasq {
     cat << EOF > /etc/dnsmasq.d/atomicjolt.xyz
@@ -95,6 +111,18 @@ development:
   domain: "canvas.atomicjolt.xyz"
   ssl: true
 EOF
+
+    cat << EOF > dynamic_settings.yml
+development:
+  config:
+    canvas:
+      canvas:
+        encryption-secret: "astringthatisactually32byteslong"
+        signing-secret: "astringthatisactually32byteslong"
+      rich-content-service:
+        app-host: "canvasrce.atomicjolt.xyz"
+EOF
+
     popd
 }
 export -f config_canvas
@@ -165,4 +193,8 @@ as vagrant config_canvas
 as vagrant once build_assets
 as vagrant once setup_database
 as vagrant enable_canvas_options
+
+as vagrant once download_rce
+as vagrant once install_rce_deps
+
 as vagrant setup_rails_shortcut
