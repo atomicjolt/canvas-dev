@@ -153,7 +153,7 @@ chmod 777 /state
 
 once install_deps
 as vagrant once download_canvas
-as vagrant patch_canvas
+as vagrant once patch_canvas
 as postgres once setup_pg_user
 
 gem install bundler
