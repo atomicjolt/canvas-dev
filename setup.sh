@@ -22,12 +22,12 @@ function install_deps {
     apt-add-repository -y ppa:brightbox/ruby-ng
 
     curl -sS https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add -
-    echo "deb https://deb.nodesource.com/node_8.x xenial main" > /etc/apt/sources.list.d/nodesource.list
+    echo "deb https://deb.nodesource.com/node_10.x xenial main" > /etc/apt/sources.list.d/nodesource.list
 
     curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
     echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list
     apt-get update
-    apt-get install -y dnsmasq ruby2.4{,-dev} nodejs yarn=1.10.* \
+    apt-get install -y dnsmasq ruby2.5{,-dev} nodejs yarn=1.19.* \
         {zlib1g,libxml2,libsqlite3,libxmlsec1}-dev make g++ git libpq-dev \
         postgresql redis-server
 
@@ -38,7 +38,7 @@ function download_canvas {
     pushd "$HOME"
     git clone https://github.com/instructure/canvas-lms.git
     cd canvas-lms
-    git checkout release/2019-03-09.24
+    git checkout release/2020-01-29.07
     popd
 }
 export -f download_canvas
@@ -59,7 +59,8 @@ export -f setup_pg_user
 
 function install_canvas_deps {
     pushd "$HOME/canvas-lms"
-    bundle install --path vendor/bundle
+    bundle config set path 'vendor/bundle'
+    bundle install
     yarn install --pure-lockfile
     popd
 }
@@ -155,7 +156,7 @@ as vagrant once download_canvas
 as vagrant patch_canvas
 as postgres once setup_pg_user
 
-gem install bundler --version '< 1.14'
+gem install bundler
 as vagrant install_canvas_deps
 config_dnsmasq
 as vagrant config_canvas
