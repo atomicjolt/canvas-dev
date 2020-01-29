@@ -14,30 +14,35 @@ Run Canvas LMS in development mode in a virtual machine.
     4. Installs Ruby gems and npm packages.
     5. Creates and sets up the database.
     6. Compiles assets.
- 
-5. As the vagrant user, start rails. This can be done in two ways:
+    7. Runs Canvas, delayed jobs, and the RCE api automatically and sends logs
+       to syslog
+
+5. Visit canvas in your browser at localhost:8080.
+Username:  `admin@example.com`
+Password: `asdfasdf`
+
+6. (optional) If you want ssl, copy the provided canvas.conf into your nginx
+   sites-enabled directory. This makes the assumption that you use the
+   atomicjolt.xyz ssl strategy. Otherwise you will have to modify it
+
+## Running manually
+If you'd rather run a service manually, find the directory in /etc/service where
+it's run from and run `svc -d [path-to-directory]`. Then start the service as
+the vagrant user as described below:
+
+### Rails
 ```bash
 cd ~/canvas-lms
 bundle exec rails --binding 0.0.0.0
 ```
-or simply `rails` which is a script on your path that does that for you.
 
-6. Visit canvas in your browser at localhost:8080.
-Username:  `admin@example.com`
-Password: `asdfasdf`
-
-7. (optional) If you want ssl, copy the provided canvas.conf into your nginx
-   sites-enabled directory. This makes the assumption that you use the
-   atomicjolt.xyz ssl strategy. Otherwise you will have to modify it
-
-## Tips
-1. To run delayed jobs (if you need them):
+### Delayed job
 ```bash
 cd ~/canvas-lms
 ./script/delayed_job run
 ```
 
-2. To run the canvas RCE service:
+### RCE API
 ```bash
 cd ~/canvas-rce-api
 NODE_ENV=production npm start
