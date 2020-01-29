@@ -22,14 +22,15 @@ function install_deps {
     apt-add-repository -y ppa:brightbox/ruby-ng
 
     curl -sS https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add -
-    echo "deb https://deb.nodesource.com/node_8.x xenial main" > /etc/apt/sources.list.d/nodesource.list
+    echo "deb https://deb.nodesource.com/node_10.x xenial main" > /etc/apt/sources.list.d/nodesource.list
 
     curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
     echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list
     apt-get update
-    apt-get install -y dnsmasq ruby2.4{,-dev} nodejs yarn=1.10.* \
-        {zlib1g,libxml2,libsqlite3,libxmlsec1}-dev make g++ git libpq-dev \
-        postgresql redis-server
+    # just installing resolvconf enables dnsmasq as a nameserver
+    apt-get install -y daemontools-run dnsmasq resolvconf ruby2.5{,-dev} \
+        nodejs yarn=1.19.* {zlib1g,libxml2,libsqlite3,libxmlsec1}-dev make g++ \
+        git libpq-dev postgresql redis-server
 
     apt-mark hold yarn
 }
@@ -38,18 +39,19 @@ function download_canvas {
     pushd "$HOME"
     git clone https://github.com/instructure/canvas-lms.git
     cd canvas-lms
-    git checkout release/2019-03-09.24
+    git checkout release/2020-01-29.07
     popd
 }
 export -f download_canvas
 
-function patch_canvas {
-    pushd "$HOME/canvas-lms"
-    # -N and -r - make patch ignore changes that have already been applied
-    patch -N -r - -p1 < /vagrant/canvas.patch
+function download_rce {
+    pushd "$HOME"
+    git clone https://github.com/instructure/canvas-rce-api.git
+    cd canvas-rce-api
+    git checkout v1.8
     popd
 }
-export -f patch_canvas
+export -f download_rce
 
 function setup_pg_user {
     createuser vagrant
@@ -59,11 +61,19 @@ export -f setup_pg_user
 
 function install_canvas_deps {
     pushd "$HOME/canvas-lms"
-    bundle install --path vendor/bundle
+    bundle config set path 'vendor/bundle'
+    bundle install
     yarn install --pure-lockfile
     popd
 }
 export -f install_canvas_deps
+
+function install_rce_deps {
+    pushd "$HOME/canvas-rce-api"
+    cp .env.example .env
+    npm install
+}
+export -f install_rce_deps
 
 function config_dnsmasq {
     cat << EOF > /etc/dnsmasq.d/atomicjolt.xyz
@@ -95,6 +105,18 @@ development:
   domain: "canvas.atomicjolt.xyz"
   ssl: true
 EOF
+
+    cat << EOF > dynamic_settings.yml
+development:
+  config:
+    canvas:
+      canvas:
+        encryption-secret: "astringthatisactually32byteslong"
+        signing-secret: "astringthatisactually32byteslong"
+      rich-content-service:
+        app-host: "canvasrce.atomicjolt.xyz"
+EOF
+
     popd
 }
 export -f config_canvas
@@ -146,18 +168,87 @@ EOF
 }
 export -f setup_rails_shortcut
 
+function setup_rails_service {
+    mkdir -p /etc/service/canvas/log
+    pushd /etc/service/canvas
+
+    cat << EOF > run
+#!/bin/bash
+exec su vagrant -c "cd /home/vagrant/canvas-lms && bundle exec rails s --binding 0.0.0.0"
+EOF
+
+    chmod 700 run
+
+    cd log
+
+    cat << EOF > run
+#!/bin/bash
+exec 2>&1
+exec setuidgid vagrant logger -t canvas-lms
+EOF
+
+    chmod 700 run
+    popd
+}
+
+function setup_job_service {
+    mkdir -p /etc/service/delayed_job/log
+    pushd /etc/service/delayed_job
+
+    cat << EOF > run
+#!/bin/bash
+exec su vagrant -c "cd /home/vagrant/canvas-lms && ./script/delayed_job run"
+EOF
+
+    chmod 700 run
+
+    cd log
+
+    cat << EOF > run
+#!/bin/bash
+exec 2>&1
+exec setuidgid vagrant logger -t canvas-delayed-jobs
+EOF
+
+    chmod 700 run
+    popd
+}
+
+function setup_rce_service {
+    mkdir -p /etc/service/rce/log
+    pushd /etc/service/rce
+
+    cat << EOF > run
+#!/bin/bash
+export NODE_ENV=production
+exec su vagrant -c "cd /home/vagrant/canvas-rce-api && npm start"
+EOF
+
+    chmod 700 run
+
+    cd log
+
+    cat << EOF > run
+#!/bin/bash
+exec 2>&1
+exec setuidgid vagrant logger -t canvas-rce-api
+EOF
+
+    chmod 700 run
+    popd
+}
+
 cd /vagrant
 mkdir -p /state
 chmod 777 /state
 
 once install_deps
 as vagrant once download_canvas
-as vagrant patch_canvas
 as postgres once setup_pg_user
-
-gem install bundler --version '< 1.14'
-as vagrant install_canvas_deps
 config_dnsmasq
+
+gem install bundler
+as vagrant install_canvas_deps
 as vagrant config_canvas
 
 # you have to do this before running migrations or there's an error with the
@@ -165,4 +256,10 @@ as vagrant config_canvas
 as vagrant once build_assets
 as vagrant once setup_database
 as vagrant enable_canvas_options
-as vagrant setup_rails_shortcut
+
+as vagrant once download_rce
+as vagrant install_rce_deps
+
+setup_rails_service
+setup_job_service
+setup_rce_service
