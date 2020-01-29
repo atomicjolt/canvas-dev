@@ -191,6 +191,53 @@ EOF
     popd
 }
 
+function setup_job_service {
+    mkdir -p /etc/service/delayed_job/log
+    pushd /etc/service/delayed_job
+
+    cat << EOF > run
+#!/bin/bash
+exec su vagrant -c "cd /home/vagrant/canvas-lms && ./script/delayed_job run"
+EOF
+
+    chmod 700 run
+
+    cd log
+
+    cat << EOF > run
+#!/bin/bash
+exec 2>&1
+exec setuidgid vagrant logger -t canvas-delayed-jobs
+EOF
+
+    chmod 700 run
+    popd
+}
+
+function setup_rce_service {
+    mkdir -p /etc/service/rce/log
+    pushd /etc/service/rce
+
+    cat << EOF > run
+#!/bin/bash
+export NODE_ENV=production
+exec su vagrant -c "cd /home/vagrant/canvas-rce-api && npm start"
+EOF
+
+    chmod 700 run
+
+    cd log
+
+    cat << EOF > run
+#!/bin/bash
+exec 2>&1
+exec setuidgid vagrant logger -t canvas-rce-api
+EOF
+
+    chmod 700 run
+    popd
+}
+
 cd /vagrant
 mkdir -p /state
 chmod 777 /state
@@ -214,3 +261,5 @@ as vagrant once download_rce
 as vagrant install_rce_deps
 
 setup_rails_service
+setup_job_service
+setup_rce_service
