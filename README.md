@@ -36,3 +36,9 @@ Password: `asdfasdf`
 cd ~/canvas-lms
 ./script/delayed_job run
 ```
+
+2. To run the canvas RCE service:
+```bash
+cd ~/canvas-rce-api
+NODE_ENV=production npm start
+```
