@@ -28,9 +28,9 @@ function install_deps {
     echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list
     apt-get update
     # just installing resolvconf enables dnsmasq as a nameserver
-    apt-get install -y dnsmasq resolvconf ruby2.5{,-dev} nodejs yarn=1.19.* \
-        {zlib1g,libxml2,libsqlite3,libxmlsec1}-dev make g++ git libpq-dev \
-        postgresql redis-server
+    apt-get install -y daemontools-run dnsmasq resolvconf ruby2.5{,-dev} \
+        nodejs yarn=1.19.* {zlib1g,libxml2,libsqlite3,libxmlsec1}-dev make g++ \
+        git libpq-dev postgresql redis-server
 
     apt-mark hold yarn
 }
@@ -168,6 +168,29 @@ EOF
 }
 export -f setup_rails_shortcut
 
+function setup_rails_service {
+    mkdir -p /etc/service/canvas/log
+    pushd /etc/service/canvas
+
+    cat << EOF > run
+#!/bin/bash
+exec su vagrant -c "cd /home/vagrant/canvas-lms && bundle exec rails s --binding 0.0.0.0"
+EOF
+
+    chmod 700 run
+
+    cd log
+
+    cat << EOF > run
+#!/bin/bash
+exec 2>&1
+exec setuidgid vagrant logger -t canvas-lms
+EOF
+
+    chmod 700 run
+    popd
+}
+
 cd /vagrant
 mkdir -p /state
 chmod 777 /state
@@ -190,4 +213,4 @@ as vagrant enable_canvas_options
 as vagrant once download_rce
 as vagrant install_rce_deps
 
-as vagrant setup_rails_shortcut
+setup_rails_service
