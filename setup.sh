@@ -53,15 +53,6 @@ function download_rce {
 }
 export -f download_rce
 
-
-function patch_canvas {
-    pushd "$HOME/canvas-lms"
-    # -N and -r - make patch ignore changes that have already been applied
-    patch -N -r - -p1 < /vagrant/canvas.patch
-    popd
-}
-export -f patch_canvas
-
 function setup_pg_user {
     createuser vagrant
     psql -c "alter user vagrant with superuser" postgres
@@ -183,12 +174,11 @@ chmod 777 /state
 
 once install_deps
 as vagrant once download_canvas
-as vagrant once patch_canvas
 as postgres once setup_pg_user
+config_dnsmasq
 
 gem install bundler
 as vagrant install_canvas_deps
-config_dnsmasq
 as vagrant config_canvas
 
 # you have to do this before running migrations or there's an error with the
