@@ -27,7 +27,8 @@ function install_deps {
     curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
     echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list
     apt-get update
-    apt-get install -y dnsmasq ruby2.5{,-dev} nodejs yarn=1.19.* \
+    # just installing resolvconf enabled dnsmasq as a nameserver
+    apt-get install -y dnsmasq resolvconf ruby2.5{,-dev} nodejs yarn=1.19.* \
         {zlib1g,libxml2,libsqlite3,libxmlsec1}-dev make g++ git libpq-dev \
         postgresql redis-server
 
@@ -113,19 +114,19 @@ development:
   domain: "canvas.atomicjolt.xyz"
   ssl: true
 EOF
-    popd
 
     cat << EOF > dynamic_settings.yml
 development:
   config:
-   canvas:
     canvas:
-     encryption-secret: "astringthatisactually32byteslong"
-     signing-secret: "astringthatisactually32byteslong"
-   rich-content-service:
-    app-host: "canvasrce.atomicjolt.xyz"
+      canvas:
+        encryption-secret: "astringthatisactually32byteslong"
+        signing-secret: "astringthatisactually32byteslong"
+      rich-content-service:
+        app-host: "canvasrce.atomicjolt.xyz"
 EOF
 
+    popd
 }
 export -f config_canvas
 
