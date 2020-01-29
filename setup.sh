@@ -27,7 +27,7 @@ function install_deps {
     curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
     echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list
     apt-get update
-    # just installing resolvconf enabled dnsmasq as a nameserver
+    # just installing resolvconf enables dnsmasq as a nameserver
     apt-get install -y dnsmasq resolvconf ruby2.5{,-dev} nodejs yarn=1.19.* \
         {zlib1g,libxml2,libsqlite3,libxmlsec1}-dev make g++ git libpq-dev \
         postgresql redis-server
