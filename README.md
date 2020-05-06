@@ -33,7 +33,7 @@ the vagrant user as described below:
 ### Rails
 ```bash
 cd ~/canvas-lms
-bundle exec rails --binding 0.0.0.0
+bundle exec rails server --binding 0.0.0.0
 ```
 
 ### Delayed job
