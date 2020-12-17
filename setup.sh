@@ -28,8 +28,8 @@ function install_deps {
     echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list
     apt-get update
     # just installing resolvconf enables dnsmasq as a nameserver
-    apt-get install -y daemontools-run dnsmasq resolvconf ruby2.5{,-dev} \
-        nodejs yarn=1.19.* {zlib1g,libxml2,libsqlite3,libxmlsec1}-dev make g++ \
+    apt-get install -y daemontools-run dnsmasq resolvconf ruby2.6{,-dev} \
+        nodejs yarn {zlib1g,libxml2,libsqlite3,libxmlsec1}-dev make g++ \
         git libpq-dev postgresql redis-server
 
     apt-mark hold yarn
@@ -39,7 +39,7 @@ function download_canvas {
     pushd "$HOME"
     git clone https://github.com/instructure/canvas-lms.git
     cd canvas-lms
-    git checkout release/2020-01-29.07
+    git checkout release/2020-11-18.29
     popd
 }
 export -f download_canvas
@@ -247,7 +247,8 @@ as vagrant once download_canvas
 as postgres once setup_pg_user
 config_dnsmasq
 
-gem install bundler
+gem install bundler --version '< 2.1.4'
+
 as vagrant install_canvas_deps
 as vagrant config_canvas
 
