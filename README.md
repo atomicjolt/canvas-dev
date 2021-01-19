@@ -29,8 +29,9 @@ Password: `asdfasdf`
 
 ## Running manually
 If you'd rather run a service manually, find the directory in /etc/service where
-it's run from and run `svc -d [path-to-directory]`. Then start the service as
-the vagrant user as described below:
+it's run from and run `svc -d [path-to-directory]`. e.g. `svc -d
+/etc/service/canvas`.
+Then start the service as the vagrant user as described below:
 
 ### Rails
 ```bash
