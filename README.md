@@ -23,7 +23,9 @@ Password: `asdfasdf`
 
 6. (optional) If you want ssl, copy the provided canvas.conf into your nginx
    sites-enabled directory. This makes the assumption that you use the
-   atomicjolt.xyz ssl strategy. Otherwise you will have to modify it
+   atomicjolt.xyz ssl strategy. Otherwise you will have to modify it. On MacOS,
+   you may need to add `canvas.conf` to the your nginx `servers` directory
+   instead.
 
 ## Running manually
 If you'd rather run a service manually, find the directory in /etc/service where
